@@ -7,6 +7,7 @@ import jsxA11y from 'eslint-plugin-jsx-a11y'
 import { defineConfig, globalIgnores } from 'eslint/config'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import eslintConfigPrettier from 'eslint-config-prettier'
 
 const rootDirectory = dirname(fileURLToPath(import.meta.url));
 
@@ -123,4 +124,6 @@ export default defineConfig([
       '@typescript-eslint/no-explicit-any': 'warn',
     },
   },
-])
+
+  eslintConfigPrettier,
+]);
