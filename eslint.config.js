@@ -1,13 +1,17 @@
-import js from '@eslint/js'
-import globals from 'globals'
-import reactHooks from 'eslint-plugin-react-hooks'
-import reactRefresh from 'eslint-plugin-react-refresh'
-import { importX } from 'eslint-plugin-import-x'
-import jsxA11y from 'eslint-plugin-jsx-a11y'
-import { defineConfig, globalIgnores } from 'eslint/config'
 import { dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import js from '@eslint/js'
+import eslintReact from '@eslint-react/eslint-plugin'
+import { defineConfig, globalIgnores } from 'eslint/config'
 import eslintConfigPrettier from 'eslint-config-prettier'
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
+import { importX } from 'eslint-plugin-import-x'
+import jsxA11y from 'eslint-plugin-jsx-a11y'
+import reactHooks from 'eslint-plugin-react-hooks'
+import reactRefresh from 'eslint-plugin-react-refresh'
+import globals from 'globals'
+import tseslint from 'typescript-eslint'
 
 const rootDirectory = dirname(fileURLToPath(import.meta.url));
 
@@ -33,7 +37,7 @@ export default defineConfig([
       js.configs.recommended,
       importX.flatConfigs.recommended,
       jsxA11y.flatConfigs.recommended,
-      eslintReact.configs.flat.recommended,
+      eslintReact.configs.recommended,
     ],
 
     plugins: {
@@ -50,9 +54,11 @@ export default defineConfig([
     },
 
     settings: {
-      'import-x/resolver': {
-        typescript: true,
-      },
+      'import-x/resolver-next': [
+        createTypeScriptImportResolver({
+          alwaysTryTypes: true,
+        }),
+      ],
     },
 
     rules: {
@@ -100,7 +106,7 @@ export default defineConfig([
     extends: [
       tseslint.configs.recommended,
       tseslint.configs.recommendedTypeChecked,
-      eslintReact.configs.recommendedTypeChecked,
+      eslintReact.configs['recommended-type-checked'],
       importX.flatConfigs.typescript,
     ],
 
