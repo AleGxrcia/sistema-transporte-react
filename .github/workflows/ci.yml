@@ -1,0 +1,87 @@
+name: CI/CD Pipeline
+
+# Se activa con pushes a main/develop y PRs dirigidos a esas ramas
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Cancela ejecuciones anteriores del mismo branch/PR cuando llega un push nuevo
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Variables de entorno utilizadas en todos los jobs
+env:
+  NODE_VERSION: "24"
+
+# Permiso mínimo por defecto (principio de menor privilegio)
+permissions:
+  contents: read
+
+jobs:
+  # Job 1: Ejecutar comprobaciones de calidad
+  lint-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      # Obtener el código del repositorio
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      # Configurar Node.js y cachear los paquetes de npm
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      # Instalar las versiones exactas de package-lock.json
+      - name: Install dependencies
+        run: npm ci
+
+      # Comprobar los tipos de TypeScript sin generar archivos
+      - name: Type check
+        run: npm run type-check
+
+      # Ejecutar ESLint para detectar problemas de calidad del código
+      - name: Lint
+        run: npm run lint
+
+      # Verificar el formato de Prettier
+      - name: Format check
+        run: npm run format:check
+
+      # Ejecutar las pruebas con cobertura
+      - name: Run tests
+        run: npm test -- --run --coverage
+
+      # Subir la cobertura a Codecov
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage/coverage-final.json
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  # Job 2: Confirmar que el proyecto compila correctamente
+  build:
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+        env:
+          VITE_API_URL: ${{ vars.API_URL }}
